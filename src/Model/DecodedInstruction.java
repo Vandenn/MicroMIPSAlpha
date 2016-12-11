@@ -22,9 +22,9 @@ public class DecodedInstruction
             if (opcode.getIR16_31().endsWith("100101")) result.type = Instruction.OR;
             else if (opcode.getIR16_31().endsWith("101111")) result.type = Instruction.DSUBU;
             else if (opcode.getIR16_31().endsWith("101010")) result.type = Instruction.SLT;
-            result.rs = Converter.binaryToInt(opcode.getIR11_15());
-            result.rt = Converter.binaryToInt(opcode.getIR16_31().substring(0, 6));
-            result.rd = Converter.binaryToInt(opcode.getIR6_10());
+            result.rt = Converter.binaryToInt(opcode.getIR11_15());
+            result.rd = Converter.binaryToInt(opcode.getIR16_31().substring(0, 5));
+            result.rs = Converter.binaryToInt(opcode.getIR6_10());
         }
         else if (opcode.getIR0_5().equals("000101"))
         {

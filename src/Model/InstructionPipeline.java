@@ -27,6 +27,9 @@ public class InstructionPipeline
     // Error if any
     private ErrorLogData error;
     
+    // Check if instruction has ended
+    private Boolean hasEnded;
+    
     public InstructionPipeline(int index, Processor processor)
     {
         this.index = index;
@@ -40,6 +43,7 @@ public class InstructionPipeline
         this.p = processor;
         currentStep = null;
         error = null;
+        hasEnded = false;
     }
     
     public Boolean nextStep()
@@ -57,7 +61,7 @@ public class InstructionPipeline
                 case ID: currentStep = Step.EX; return stepEX();
                 case EX: currentStep = Step.MEM; return stepMEM();
                 case MEM: currentStep = Step.WB; return stepWB();
-                case WB: currentStep = Step.END;
+                case WB: currentStep = Step.END; stepEnd();
                 default: return false;
             }
         }
@@ -95,6 +99,13 @@ public class InstructionPipeline
                     ArrayList<Integer> adder = p.registerToUsers.get(inst.rd);
                     adder.add(index);
                     p.registerToUsers.replace(inst.rd, adder);
+                    
+                    System.out.println("ASDF " + inst.type + " - " + inst.rd);
+                    for (Integer user : p.registerToUsers.get(inst.rd))
+                    {
+                        System.out.print(user + ",");
+                    }
+                    System.out.println("");
                 }
                 return true;
             }
@@ -134,8 +145,6 @@ public class InstructionPipeline
                 {
                     p.irs.setIdex_B(getRegisterValue(inst.rt));
                 }
-                
-                resultAvailableNextStep = true;
             }
         }
         return true;
@@ -154,11 +163,6 @@ public class InstructionPipeline
                 p.irs.setExmem_ALU(result);
                 p.irs.setExmem_Cond(0);
             }
-            resultAvailable = true;
-        }
-        else if (inst.type == Instruction.LD)
-        {
-            //Do necesary LD ALU operation here.
             resultAvailableNextStep = true;
         }
         else if (inst.type == Instruction.SD)
@@ -194,12 +198,16 @@ public class InstructionPipeline
         if (inst.type == Instruction.LD)
         {
             //Set result here and update p.irs
-            resultAvailable = true;
+            resultAvailableNextStep = true;
         }
         else if (inst.type == Instruction.SD)
         {
             //Perform SD here. 
             //Add code to get rd's register value or Ex/Mem B's value.
+        }
+        else if (category == InstructionCategory.ALU)
+        {
+            resultAvailable = true;
         }
         return true;
     }
@@ -208,12 +216,21 @@ public class InstructionPipeline
     {
         if (checkIfInstructionShouldHaveResult())
         {
+            if (inst.type == Instruction.LD) resultAvailable = true;
             p.db.setRegister(inst.rd, result);
-            if (p.registerToUsers.containsKey(inst.rd) && p.registerToUsers.get(inst.rd).contains(index))
-                p.registerToUsers.get(inst.rd).remove((Integer)index);
             p.irs.setRegAff(inst.rd);
         }
         return true;
+    }
+    
+    private void stepEnd()
+    {
+        if (!hasEnded)
+        {
+            if (p.registerToUsers.containsKey(inst.rd) && p.registerToUsers.get(inst.rd).contains(index))
+                p.registerToUsers.get(inst.rd).remove((Integer)index);
+            hasEnded = true;
+        }
     }
     
     public ErrorLogData getError()
@@ -259,6 +276,12 @@ public class InstructionPipeline
         if (p.registerToUsers.containsKey(register))
         {
             ArrayList<Integer> users = p.registerToUsers.get(register);
+            System.out.println(inst.type + " - " + register);
+            for (Integer i : users)
+            {
+                System.out.print(i + ",");
+            }
+            System.out.println("");
             if (!users.isEmpty())
             {
                 int lastUser = users.get(users.size() - 1);
