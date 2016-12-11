@@ -76,7 +76,7 @@ public enum Instruction
         int secondRegister = Integer.parseInt(registers[1].substring(1));
         int thirdRegister = Integer.parseInt(registers[2].substring(1));
         
-        if (firstRegister > 31 || secondRegister > 31 || thirdRegister > 31) return "";
+        if (firstRegister > 31 || secondRegister > 31 || thirdRegister > 31) return "Invalid register!";
         
         StringBuilder sb = new StringBuilder();
         
@@ -116,11 +116,11 @@ public enum Instruction
         }
         else
         {
-            if (!labels.containsKey(data[2])) return "";
+            if (!labels.containsKey(data[2])) return "No such label!";
             immediate = (labels.get(data[2]) - (codeLine + 0x0004)) / 0x0004;
         }
         
-        if (firstRegister > 31 || secondRegister > 31) return "";
+        if (firstRegister > 31 || secondRegister > 31) return "Invalid register!";
         
         StringBuilder sb = new StringBuilder();
         
@@ -140,7 +140,7 @@ public enum Instruction
         int baseRegister = Integer.parseInt(data[1].substring(data[1].indexOf("r") + 1, data[1].indexOf(")")));
         int offset = Integer.parseInt(data[1].substring(0, data[1].indexOf("(")), 16);
         
-        if (destinationRegister > 31 || baseRegister > 31) return "";
+        if (destinationRegister > 31 || baseRegister > 31) return "Invalid register!";
         
         StringBuilder sb = new StringBuilder();
         
@@ -160,7 +160,7 @@ public enum Instruction
         int secondRegister = Integer.parseInt(data[1].substring(1));
         int immediate = Integer.parseInt(data[2].substring(2), 16);
         
-        if (firstRegister > 31 || secondRegister > 31) return "";
+        if (firstRegister > 31 || secondRegister > 31) return "Invalid register!";
         
         StringBuilder sb = new StringBuilder();
         
@@ -176,7 +176,7 @@ public enum Instruction
     {
         String label = getDataPart(code);
         
-        if (!labels.containsKey(label)) return "";
+        if (!labels.containsKey(label)) return "No such label!";
         
         int index = labels.get(label) / 0x0004;
         

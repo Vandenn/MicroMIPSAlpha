@@ -99,6 +99,11 @@ public class Database
         return instructionDB.containsKey(memoryLocation) && instructionDB.get(memoryLocation) != null;
     }
     
+    public Boolean memoryExists(int memoryLocation)
+    {
+        return memoryDB.containsKey(memoryLocation);
+    }
+    
     public Boolean editRegister(int key, long value)
     {
         if (registerDB.containsKey(key) && value >= MINIMUM_REGISTER_VALUE && value <= MAXIMUM_REGISTER_VALUE)

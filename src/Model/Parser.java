@@ -26,6 +26,7 @@ public class Parser
         HashMap<String, Integer> labels = new HashMap<>();
         int counter = 0x1000;
         String labelRegex = "^[0-9a-z_]+[:]{1}.*$";
+        String opcodeRegex = "^[01]{32}$";
         String curr = "";
         String label = "";
         String currOpcode = "";
@@ -57,6 +58,10 @@ public class Parser
             if (currOpcode.isEmpty())
             {
                 addError((codeLine.getKey() - 0x1000) / 0x0004 + 1, "Syntax error!"); 
+            }
+            else if (!currOpcode.matches(opcodeRegex))
+            {
+                addError((codeLine.getKey() - 0x1000) / 0x0004 + 1, currOpcode);
             }
             else
             {

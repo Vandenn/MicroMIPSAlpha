@@ -49,23 +49,29 @@ public class InstructionPipeline
     
     public Boolean nextStep()
     {
+        Boolean success = false;
         if (currentStep == null)
         {
             currentStep = Step.IF;
-            return stepIF();
+            success = stepIF();
         }
         else
         {
             switch (currentStep)
             {
-                case IF: currentStep = Step.ID; return stepID();
-                case ID: currentStep = Step.EX; return stepEX();
-                case EX: currentStep = Step.MEM; return stepMEM();
-                case MEM: currentStep = Step.WB; return stepWB();
+                case IF: currentStep = Step.ID; success = stepID(); break;
+                case ID: currentStep = Step.EX; success = stepEX(); break;
+                case EX: currentStep = Step.MEM; success = stepMEM(); break;
+                case MEM: currentStep = Step.WB; success = stepWB(); break;
                 case WB: currentStep = Step.END; stepEnd();
-                default: return false;
+                default: success = false;
             }
         }
+        if (!success && error == null)
+        {
+            error = new ErrorLogData(index, "Unexpected error!");
+        }
+        return success;
     }
     
     private Boolean stepIF()
@@ -235,6 +241,11 @@ public class InstructionPipeline
         p.irs.setMemwb_ALU(p.irs.getExmem_ALU());
         if (inst.type == Instruction.LD)
         {
+            if (!p.db.memoryExists((int)p.irs.getExmem_ALU()))
+            {
+                error = new ErrorLogData(index, "No such memory!");
+                return false;
+            }
             result = p.db.getMemoryDouble((int)p.irs.getExmem_ALU());
             p.irs.setMemwb_LMD(result);
             p.irs.setMem_alu(result);
@@ -242,6 +253,11 @@ public class InstructionPipeline
         }
         else if (inst.type == Instruction.SD)
         {
+            if (!p.db.memoryExists((int)p.irs.getExmem_ALU()))
+            {
+                error = new ErrorLogData(index, "No such memory!");
+                return false;
+            }
             p.irs.setMem_alu(p.db.getMemoryDouble((int)p.irs.getExmem_ALU()));
             p.db.editMemoryDouble((int)p.irs.getExmem_ALU(), p.irs.getExmem_B());
         }
