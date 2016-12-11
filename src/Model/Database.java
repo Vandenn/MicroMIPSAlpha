@@ -156,7 +156,7 @@ public class Database
             hex = Converter.longToHex(value, 16);
             for (int i = 0; i < 8; i++)
             {
-                success = editMemory(key + i, Converter.hexToByte(hex.substring(i * 2, i * 2 + 2)));
+                success = editMemory(key + (7-i), Converter.hexToByte(hex.substring(i * 2, i * 2 + 2)));
             }
         }
         return success;
