@@ -81,6 +81,7 @@ public class Processor
         }
         
         clockCycle++;
+        if (success == false) db.clearInstructions();
         return success;
     }
     

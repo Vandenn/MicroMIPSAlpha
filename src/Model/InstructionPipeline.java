@@ -242,8 +242,8 @@ public class InstructionPipeline
         }
         else if (inst.type == Instruction.SD)
         {
-            p.db.editMemoryDouble((int)p.irs.getExmem_ALU(), p.irs.getExmem_B());
             p.irs.setMem_alu(p.db.getMemoryDouble((int)p.irs.getExmem_ALU()));
+            p.db.editMemoryDouble((int)p.irs.getExmem_ALU(), p.irs.getExmem_B());
         }
         else if (category == InstructionCategory.ALU)
         {

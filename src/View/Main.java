@@ -325,7 +325,7 @@ public class Main extends javax.swing.JFrame {
                                 updateUIAfterSingleStep();
                             }
                         });
-                        try { Thread.sleep(200); }
+                        try { Thread.sleep(50); }
                         catch(Exception e) {}
                     }
                     if (processor.getErrors().size() > 0)
