@@ -67,10 +67,6 @@ public class InstructionPipeline
                 default: success = false;
             }
         }
-        if (!success && error == null)
-        {
-            error = new ErrorLogData(index, "Unexpected error!");
-        }
         return success;
     }
     
