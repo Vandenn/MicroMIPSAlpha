@@ -99,13 +99,6 @@ public class InstructionPipeline
                     ArrayList<Integer> adder = p.registerToUsers.get(inst.rd);
                     adder.add(index);
                     p.registerToUsers.replace(inst.rd, adder);
-                    
-                    System.out.println("ASDF " + inst.type + " - " + inst.rd);
-                    for (Integer user : p.registerToUsers.get(inst.rd))
-                    {
-                        System.out.print(user + ",");
-                    }
-                    System.out.println("");
                 }
                 return true;
             }
@@ -276,12 +269,6 @@ public class InstructionPipeline
         if (p.registerToUsers.containsKey(register))
         {
             ArrayList<Integer> users = p.registerToUsers.get(register);
-            System.out.println(inst.type + " - " + register);
-            for (Integer i : users)
-            {
-                System.out.print(i + ",");
-            }
-            System.out.println("");
             if (!users.isEmpty())
             {
                 int lastUser = users.get(users.size() - 1);

@@ -454,31 +454,6 @@ public class Main extends javax.swing.JFrame {
     private void printPipeline()
     {
         TreeMap<Integer, InstructionPipeline> pipeline = (TreeMap)processor.pipeline;
-
-        /*DefaultTableModel pipelineTableModel = (DefaultTableModel)pipelineTable.getModel();
-
-        pipelineTableModel.addColumn("" + (processor.clockCycle - 1));
-
-        if (pipeline.lastEntry().getKey() > pipelineTableModel.getRowCount())
-        {
-            Object[] content = new Object[pipelineTableModel.getColumnCount()];
-            for (int i = 0; i < content.length; i++)
-            {
-                content[i] = "";
-            }
-            pipelineTableModel.addRow(content);
-            String instType = "";
-            if (pipeline.lastEntry().getValue().getInstructionType() != null) instType = pipeline.lastEntry().getValue().getInstructionType().toString();
-            pipelineTableModel.setValueAt(instType, pipelineTableModel.getRowCount() - 1, 0);
-        }
-        
-        for (Map.Entry<Integer, InstructionPipeline> entry : pipeline.entrySet())
-        {
-            if (entry.getValue().getCurrentStep() != null && entry.getValue().getCurrentStep() != Step.END)
-            {
-                pipelineTableModel.setValueAt(entry.getValue().getCurrentStep(), entry.getKey() - 1, pipelineTableModel.getColumnCount() - 1);
-            }
-        }*/
         
         Vector columns = new Vector();
         Vector rows = new Vector();
@@ -502,7 +477,7 @@ public class Main extends javax.swing.JFrame {
             if (pipeline.containsKey(i + 1))
             {
                 InstructionPipeline curr = pipeline.get(i + 1);
-                if (curr.getCurrentStep() != null && curr.getCurrentStep() != Step.END && processor.getCurrentStall() != i+1)
+                if (curr.getCurrentStep() != null && curr.getCurrentStep() != Step.END && (i+1 < processor.getCurrentStall() && processor.getCurrentStall() >= 0 || processor.getCurrentStall() < 0))
                 {
                     row.add(curr.getCurrentStep());
                 }
@@ -525,7 +500,7 @@ public class Main extends javax.swing.JFrame {
                 row.add("");
             }
             InstructionPipeline curr = pipeline.lastEntry().getValue();
-            if (curr.getCurrentStep() != null && curr.getCurrentStep() != Step.END && processor.getCurrentStall() != pipeline.lastEntry().getKey())
+            if (curr.getCurrentStep() != null && curr.getCurrentStep() != Step.END && (pipeline.lastEntry().getKey() < processor.getCurrentStall() && processor.getCurrentStall() >= 0 || processor.getCurrentStall() < 0))
             {
                 row.add(curr.getCurrentStep());
             }

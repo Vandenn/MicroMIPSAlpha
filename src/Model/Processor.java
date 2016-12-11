@@ -52,8 +52,8 @@ public class Processor
     public Boolean singleStep()
     {   
         Boolean success = false;
-        currentStall = bufferStall;
-        bufferStall = -1;
+        
+        updateStall();
         
         // Add instruction only if there's no stall and there is still an instruction to fetch
         if (currentStall < 0 && opcodes.containsKey((int)irs.getPC()) && opcodes.get((int)irs.getPC()) != null)
@@ -82,6 +82,55 @@ public class Processor
         
         clockCycle++;
         return success;
+    }
+    
+    private void updateStall()
+    {
+        if (bufferStall >= 0)
+        {
+            currentStall = bufferStall;
+            bufferStall = -1;
+        }
+        
+        System.out.print("Stall Update: ");
+        for (int i : stallWaitingOn)
+        {
+            System.out.print(i + ", ");
+        }
+        System.out.println();
+        
+        // Remove stall if there's no pending
+        if (stallWaitingOn.size() > 0)
+        {
+            for (int i = stallWaitingOn.size() - 1; i >= 0; i--)
+            {
+                ArrayList<Integer> users = registerToUsers.get(stallWaitingOn.get(i));
+                if (users.size() > 0)
+                {
+                    int lastUser = users.get(users.size() - 1);
+                    if (lastUser == currentStall)
+                    {
+                        if (users.size() > 1 && pipeline.containsKey(users.get(users.size() - 2)))
+                        {
+                            lastUser = users.get(users.size() - 2);
+                        }
+                        else stallWaitingOn.remove(i);
+                    }
+                    InstructionPipeline inst = pipeline.get(lastUser);
+                    if (inst.resultAvailableNextStep)
+                    {
+                        stallWaitingOn.remove(i);
+                    }
+                }
+                else
+                {
+                    stallWaitingOn.remove(i);
+                }
+            }
+        }
+
+        if (stallWaitingOn.size() <= 0) 
+            currentStall = -1;
     }
     
     public ArrayList<ErrorLogData> getErrors()
