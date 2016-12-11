@@ -1,6 +1,7 @@
 
 package Model;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 
 public class InstructionPipeline
@@ -155,12 +156,50 @@ public class InstructionPipeline
                 result = getRegisterValue(inst.rs) | getRegisterValue(inst.rt);
                 p.irs.setExmem_ALU(result);
                 p.irs.setExmem_Cond(0);
+            } 
+            else if(inst.type == Instruction.DADDIU)
+            {
+                BigInteger temp = BigInteger.valueOf(getRegisterValue(inst.rs));
+                temp.add(BigInteger.valueOf(getRegisterValue(inst.immediate)));
+                result = temp.longValue();
+                p.irs.setExmem_ALU(result);
+                p.irs.setExmem_Cond(0);
+            }
+            else if(inst.type == Instruction.DSUBU)
+            {
+                result = inst.rs - inst.rt;
+                p.irs.setExmem_ALU(result);
+                p.irs.setExmem_Cond(0);
+            }
+            else if(inst.type == Instruction.SLT)
+            {
+                if(inst.rs < inst.rt){
+                    result = 1;
+                }
+                else
+                {
+                    result = 0;
+                }
+                p.irs.setExmem_ALU(result);
+                p.irs.setExmem_Cond(0);
             }
             resultAvailableNextStep = true;
         }
+        else if (inst.type == Instruction.LD)
+        {
+            BigInteger temp = BigInteger.valueOf(getRegisterValue(inst.rs));
+            temp.add(BigInteger.valueOf(getRegisterValue(inst.immediate)));
+            result = temp.longValue();
+            p.irs.setExmem_ALU(result);
+            p.irs.setExmem_Cond(0);
+        }
         else if (inst.type == Instruction.SD)
         {
-            //Do necesary SD ALU operation here.
+            BigInteger temp = BigInteger.valueOf(getRegisterValue(inst.rs));
+            temp.add(BigInteger.valueOf(getRegisterValue(inst.immediate)));
+            result = temp.longValue();
+            p.irs.setExmem_ALU(result);
+            p.irs.setExmem_Cond(0);
             //Code: Stall if needed, get if ready.
             int availabilityRD = checkRegisterAvailability(inst.rd);
             if (availabilityRD <= 0)
@@ -175,11 +214,21 @@ public class InstructionPipeline
         }
         else if (inst.type == Instruction.BNE)
         {
-            //Do BNE ALU here.
+            BigInteger temp = BigInteger.valueOf(p.irs.getIfid_NPC());
+            temp.add(BigInteger.valueOf(getRegisterValue(inst.immediate)).shiftLeft(2));
+            result = temp.longValue();
+            p.irs.setExmem_ALU(result);
+            if(inst.rs != inst.rt){
+                p.irs.setExmem_Cond(1);
+            }else{
+                p.irs.setExmem_Cond(0);
+            }
         }
         else if (inst.type == Instruction.J)
         {
-            //Do J ALU here.
+            result = getRegisterValue(inst.immediate) << 2;
+            p.irs.setExmem_ALU(result);
+            p.irs.setExmem_Cond(1);
         }
         return true;
     }
@@ -190,13 +239,15 @@ public class InstructionPipeline
         p.irs.setMemwb_ALU(p.irs.getExmem_ALU());
         if (inst.type == Instruction.LD)
         {
-            //Set result here and update p.irs
+            byte temp = p.db.getMemory((int)p.irs.getExmem_ALU());
+            result = Converter.hexToLong(Converter.byteToHex(temp, 16));
+            p.irs.setMemwb_LMD(result);
             resultAvailableNextStep = true;
         }
         else if (inst.type == Instruction.SD)
         {
-            //Perform SD here. 
-            //Add code to get rd's register value or Ex/Mem B's value.
+            String temp = Converter.longToHex(p.irs.getExmem_B(), 16);
+            p.db.editMemory((int)p.irs.getExmem_ALU(), Converter.hexToByte(temp));
         }
         else if (category == InstructionCategory.ALU)
         {
