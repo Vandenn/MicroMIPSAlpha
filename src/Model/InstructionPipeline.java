@@ -112,7 +112,7 @@ public class InstructionPipeline
         p.irs.setIdex_IR(p.irs.getIfid_IR());
         p.irs.setIdex_A(p.db.getRegister(Converter.binaryToInt(opcode.getIR6_10())));
         p.irs.setIdex_B(p.db.getRegister(Converter.binaryToInt(opcode.getIR11_15())));
-        p.irs.setIdex_Imm(p.db.getRegister(Converter.binaryToInt(opcode.getIR16_31())));
+        p.irs.setIdex_Imm(Converter.binaryToInt(opcode.getIR16_31()));
         if (category == InstructionCategory.ALU || category == InstructionCategory.Memory || inst.type == Instruction.BNE)
         {
             //Code: Stall if needed, get if ready.
@@ -127,7 +127,7 @@ public class InstructionPipeline
                 p.irs.setIdex_A(getRegisterValue(inst.rs));
             }
 
-            if (category == InstructionCategory.ALU)
+            if (category == InstructionCategory.ALU && inst.type != Instruction.DADDIU)
             {
                 int availabilityRT = checkRegisterAvailability(inst.rt);
                 if (availabilityRT <= 0)
@@ -160,20 +160,20 @@ public class InstructionPipeline
             else if(inst.type == Instruction.DADDIU)
             {
                 BigInteger temp = BigInteger.valueOf(getRegisterValue(inst.rs));
-                temp.add(BigInteger.valueOf(getRegisterValue(inst.immediate)));
+                temp = temp.add(BigInteger.valueOf(inst.immediate));
                 result = temp.longValue();
                 p.irs.setExmem_ALU(result);
                 p.irs.setExmem_Cond(0);
             }
             else if(inst.type == Instruction.DSUBU)
             {
-                result = inst.rs - inst.rt;
+                result = getRegisterValue(inst.rs) - getRegisterValue(inst.rt);
                 p.irs.setExmem_ALU(result);
                 p.irs.setExmem_Cond(0);
             }
             else if(inst.type == Instruction.SLT)
             {
-                if(inst.rs < inst.rt){
+                if(getRegisterValue(inst.rs) < getRegisterValue(inst.rt)){
                     result = 1;
                 }
                 else
@@ -188,17 +188,15 @@ public class InstructionPipeline
         else if (inst.type == Instruction.LD)
         {
             BigInteger temp = BigInteger.valueOf(getRegisterValue(inst.rs));
-            temp.add(BigInteger.valueOf(getRegisterValue(inst.immediate)));
-            result = temp.longValue();
-            p.irs.setExmem_ALU(result);
+            temp = temp.add(BigInteger.valueOf(inst.immediate));
+            p.irs.setExmem_ALU(temp.longValue());
             p.irs.setExmem_Cond(0);
         }
         else if (inst.type == Instruction.SD)
         {
             BigInteger temp = BigInteger.valueOf(getRegisterValue(inst.rs));
-            temp.add(BigInteger.valueOf(getRegisterValue(inst.immediate)));
-            result = temp.longValue();
-            p.irs.setExmem_ALU(result);
+            temp = temp.add(BigInteger.valueOf(inst.immediate));
+            p.irs.setExmem_ALU(temp.longValue());
             p.irs.setExmem_Cond(0);
             //Code: Stall if needed, get if ready.
             int availabilityRD = checkRegisterAvailability(inst.rd);
@@ -215,9 +213,8 @@ public class InstructionPipeline
         else if (inst.type == Instruction.BNE)
         {
             BigInteger temp = BigInteger.valueOf(p.irs.getIfid_NPC());
-            temp.add(BigInteger.valueOf(getRegisterValue(inst.immediate)).shiftLeft(2));
-            result = temp.longValue();
-            p.irs.setExmem_ALU(result);
+            temp = temp.add(BigInteger.valueOf(inst.immediate).shiftLeft(2));
+            p.irs.setExmem_ALU(temp.longValue());
             if(inst.rs != inst.rt){
                 p.irs.setExmem_Cond(1);
             }else{
@@ -226,8 +223,7 @@ public class InstructionPipeline
         }
         else if (inst.type == Instruction.J)
         {
-            result = getRegisterValue(inst.immediate) << 2;
-            p.irs.setExmem_ALU(result);
+            p.irs.setExmem_ALU(getRegisterValue(inst.immediate) << 2);
             p.irs.setExmem_Cond(1);
         }
         return true;
@@ -239,15 +235,15 @@ public class InstructionPipeline
         p.irs.setMemwb_ALU(p.irs.getExmem_ALU());
         if (inst.type == Instruction.LD)
         {
-            byte temp = p.db.getMemory((int)p.irs.getExmem_ALU());
-            result = Converter.hexToLong(Converter.byteToHex(temp, 16));
+            result = p.db.getMemoryDouble((int)p.irs.getExmem_ALU());
             p.irs.setMemwb_LMD(result);
+            p.irs.setMem_alu(result);
             resultAvailableNextStep = true;
         }
         else if (inst.type == Instruction.SD)
         {
-            String temp = Converter.longToHex(p.irs.getExmem_B(), 16);
-            p.db.editMemory((int)p.irs.getExmem_ALU(), Converter.hexToByte(temp));
+            p.db.editMemoryDouble((int)p.irs.getExmem_ALU(), p.irs.getExmem_B());
+            p.irs.setMem_alu(p.db.getMemoryDouble((int)p.irs.getExmem_ALU()));
         }
         else if (category == InstructionCategory.ALU)
         {

@@ -84,15 +84,6 @@ public class Database
         return registerDB;
     }
     
-    public byte getMemory(int location)
-    {
-        if (memoryDB.containsKey(location))
-        {
-            return memoryDB.get(location);
-        }
-        return DEFAULT_MEMORY_VALUE;
-    }
-    
     public Map getMemory()
     {
         return memoryDB;
@@ -118,6 +109,28 @@ public class Database
         return false;
     }
     
+    public byte getMemory(int location)
+    {
+        if (memoryDB.containsKey(location))
+        {
+            return memoryDB.get(location);
+        }
+        return DEFAULT_MEMORY_VALUE;
+    }
+    
+    public long getMemoryDouble(int location)
+    {
+        String hex = "";
+        if (memoryDB.containsKey(location) && memoryDB.containsKey(location + 0x0007))
+        {
+            for (int i = 0; i < 8; i++)
+            {
+                hex = Converter.byteToHex(memoryDB.get(location + i), 2) + hex;
+            }
+        }
+        return Converter.hexToLong(hex);
+    }
+    
     public Boolean editMemory(int key, byte value)
     {
         if (memoryDB.containsKey(key) && value >= MINIMUM_REGISTER_VALUE && value <= MAXIMUM_MEMORY_VALUE)
@@ -126,6 +139,22 @@ public class Database
             return true;
         }
         return false;
+    }
+    
+    public Boolean editMemoryDouble(int key, long value)
+    {
+        Boolean success = false;
+        String hex;
+        byte single;
+        if (memoryDB.containsKey(key) && memoryDB.containsKey(key + 0x0007))
+        {
+            hex = Converter.longToHex(value, 16);
+            for (int i = 0; i < 8; i++)
+            {
+                success = editMemory(key + i, Converter.hexToByte(hex.substring(i * 2, i * 2 + 2)));
+            }
+        }
+        return success;
     }
     
     public Boolean addInstruction(int key, String value)
